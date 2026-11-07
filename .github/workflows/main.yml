@@ -19,18 +19,18 @@ jobs:
           git clone https://github.com/Anuken/Arc ../Arc
           git -C ../Arc checkout 7445105cd2
 
-      - name: Debug natives
-        run: |
-          grep -n -B2 -A20 copyNatives ios/build.gradle || true
-          ls -la ios/libs || true
-          find ../Arc -name 'libarc-freetype*' || true
+      - name: Fetch MetalANGLEKit frameworks
+        run: ./gradlew :Arc:backends:backend-robovm:extractMetalANGLEKit
+
+      - name: Check frameworks landed
+        run: ls -la ../Arc/backends/backend-robovm/res/META-INF/robovm/ios/libs
 
       - name: Build IPA
         run: ./gradlew ios:createIPA -Probovm.iosSkipSigning=true
 
       - name: Find IPA
         if: always()
-        run: find . -name '*.ipa' -not -path './node_modules/*' || true
+        run: find . -name '*.ipa' || true
 
       - name: Upload IPA
         uses: actions/upload-artifact@v4
