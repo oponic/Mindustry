@@ -22,8 +22,14 @@ jobs:
       - name: Fetch MetalANGLEKit frameworks
         run: ./gradlew :Arc:backends:backend-robovm:extractMetalANGLEKit
 
-      - name: Check frameworks landed
-        run: ls -la ../Arc/backends/backend-robovm/res/META-INF/robovm/ios/libs
+      - name: Build Arc iOS natives
+        run: ./gradlew :Arc:arc-core:jnigenBuildAllIOS
+
+      - name: Add arc.xcframework to backend libs
+        run: |
+          cp -R ../Arc/arc-core/build/natives/arc.xcframework \
+            ../Arc/backends/backend-robovm/res/META-INF/robovm/ios/libs/
+          ls -la ../Arc/backends/backend-robovm/res/META-INF/robovm/ios/libs
 
       - name: Build IPA
         run: ./gradlew ios:createIPA -Probovm.iosSkipSigning=true
