@@ -1,0 +1,26 @@
+name: Inspect Arc
+on: workflow_dispatch
+
+jobs:
+  inspect:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Clone Arc
+        run: |
+          git clone https://github.com/Anuken/Arc ../Arc
+          git -C ../Arc checkout 7445105cd2
+
+      - name: Find the frameworks
+        run: |
+          echo "--- MetalANGLE / GLES files in Arc"
+          find ../Arc \( -iname '*MetalANGLE*' -o -iname 'libGLESv2*' -o -iname 'libEGL*' -o -iname 'libfeature_support*' -o -iname '*.xcframework' \) | head -50
+          echo "--- backend-robovm layout"
+          find ../Arc/backends/backend-robovm -maxdepth 5 -not -path '*/src/*' | head -80
+          echo "--- mentions in build files and workflows"
+          grep -rIl "MetalANGLE" ../Arc . 2>/dev/null | grep -v '/src/' | head -30
+          echo "--- Arc workflows"
+          ls ../Arc/.github/workflows 2>/dev/null
+          echo "--- ios/build.gradle"
+          cat ios/build.gradle
