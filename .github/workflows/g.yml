@@ -1,0 +1,30 @@
+name: Arc iOS natives
+on: workflow_dispatch
+
+jobs:
+  natives:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - name: Clone Arc
+        run: |
+          git clone https://github.com/Anuken/Arc ../Arc
+          git -C ../Arc checkout 7445105cd2
+
+      - name: List iOS-related tasks
+        run: ./gradlew :Arc:arc-core:tasks --all | grep -i ios || true
+
+      - name: Try building iOS natives
+        run: ./gradlew :Arc:arc-core:jnigenBuildAllIOS || ./gradlew :Arc:arc-core:jnigenBuildIOS || true
+
+      - name: Find outputs
+        if: always()
+        run: |
+          find ../Arc -newer ../Arc/build.gradle \( -name '*.a' -o -name '*.dylib' -o -name '*.framework' -o -name '*.xcframework' \) -not -path '*/.git/*' | head -30
+          ls -R ../Arc/arc-core/build/natives 2>/dev/null | head -40
