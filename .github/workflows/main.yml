@@ -1,17 +1,40 @@
 name: Build iOS IPA
 on: workflow_dispatch
+
 jobs:
   build:
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-java@v4
+      - name: Checkout Mindustry
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: 17
+
+      - name: Clone Arc next to Mindustry
+        run: |
+          git clone https://github.com/Anuken/Arc ../Arc
+          git -C ../Arc checkout 7445105cd2
+
+      - name: Debug natives
+        run: |
+          grep -n -B2 -A20 copyNatives ios/build.gradle || true
+          ls -la ios/libs || true
+          find ../Arc -name 'libarc-freetype*' || true
+
       - name: Build IPA
         run: ./gradlew ios:createIPA -Probovm.iosSkipSigning=true
-      - uses: actions/upload-artifact@v4
+
+      - name: Find IPA
+        if: always()
+        run: find . -name '*.ipa' -not -path './node_modules/*' || true
+
+      - name: Upload IPA
+        uses: actions/upload-artifact@v4
         with:
           name: mindustry-ipa
           path: ios/build/robovm/*.ipa
+          if-no-files-found: error
